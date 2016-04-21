@@ -1,0 +1,80 @@
+backand /likes
+localStorage likes
+{
+	timeAdded: timestamp,
+	categories: {
+		cat1: 1,
+		cat2: 0
+	},
+	scenes:{
+		scenes1: 1,
+		scenes2: -1
+	},
+	events:{
+		id1: 1,
+		id2: -1
+	}
+}
+
+
+GET /events/categories
+RESPONSE
+{
+data: [
+	{
+		url: cat1,
+		fav: 2,
+		events: [
+			{
+				url: etc,
+				text: etc,
+				fav: 1
+			},
+			{
+				url: etc,
+				text: etc,
+				fav: 2
+			}
+		]
+	},
+	{
+		url: cat1,
+		fav: 2,
+		events: [
+			{
+				url: etc,
+				text: etc
+			},
+			{
+				url: etc,
+				text: etc
+			}
+		]
+	}
+	]
+}
+
+
+GET /events
+RESPONSE
+{
+data: [
+		{
+			url: etc,
+			text: etc,
+			fav: 1
+		},
+		{
+			url: etc,
+			text: etc,
+			fav: 2
+		}
+	]
+}
+
+
+POST {
+	category: [films, shows]
+	scene: [hipster,hiphop]
+	$text: {$search:'word'}
+}
