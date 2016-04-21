@@ -1,30 +1,17 @@
 {
-  "name": "ionic",
+  "name": "ionic-nyc",
   "version": "1.1.1",
-  "description": "ionic: An Ionic project",
+  "description": "ionic-nyc: An Ionic project",
   "dependencies": {
-    "body-parser": "latest",
-    "colors": "latest",
-    "contentful": "^2.1.2",
-    "ejs": "^2.4.1",
-    "express": "latest",
-    "moment": "latest",
-    "o3o": "^0.1.0",
-    "q": "latest",
-    "request": "latest",
-    "serve-static": "latest",
-    "tracer": "latest",
-    "underscore": "latest",
-    "url": "latest"
-  },
-  "devDependencies": {    
     "gulp": "^3.5.6",
     "gulp-sass": "^2.0.4",
     "gulp-concat": "^2.2.0",
     "gulp-minify-css": "^0.3.0",
-    "gulp-rename": "^1.2.0",
-    "gulp-util": "^2.2.14",
+    "gulp-rename": "^1.2.0"
+  },
+  "devDependencies": {
     "bower": "^1.3.3",
+    "gulp-util": "^2.2.14",
     "shelljs": "^0.3.0"
   },
   "cordovaPlugins": [
@@ -41,6 +28,7 @@
       "platform": "ios",
       "version": "",
       "locator": "ios"
-    }
+    },
+    "android"
   ]
 }

@@ -5,25 +5,31 @@
 // the 2nd parameter is an array of 'requires'
 angular.module('SimpleRESTIonic', ['ionic', 'backand', 'SimpleRESTIonic.controllers', 'SimpleRESTIonic.services'])
 
-    /*   .run(function (, Backand) {
+    .run(function ($ionicPlatform) {
+        $ionicPlatform.ready(function () {
+            // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
+            // for form inputs)
+            if (window.cordova && window.cordova.plugins && window.cordova.plugins.Keyboard) {
+                cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
+                cordova.plugins.Keyboard.disableScroll(true);
 
-     })
-     */
-    .config(function (BackandProvider, $locationProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
-	  $locationProvider.html5Mode({ enabled: true, requireBase: false });
+            }
+            if (window.StatusBar) {
+                // org.apache.cordova.statusbar required
+                StatusBar.styleLightContent();
+            }
+        });
+    })
+    .config(function (BackandProvider, $stateProvider, $urlRouterProvider, $httpProvider) {
 
-        // change here to your appName
-        BackandProvider.setAppName('ionicnyc');
-
-        BackandProvider.setSignUpToken('8253dd48-7cc0-4b72-93b3-fa7d0a2e5633');
-
-        // token is for anonymous login. see http://docs.backand.com/en/latest/apidocs/security/index.html#anonymous-access
-        BackandProvider.setAnonymousToken('4ebf497a-bd2e-4076-8136-bed811e74a5f');
+        BackandProvider.setAppName('ionicstarter'); // change here to your app name
+        BackandProvider.setSignUpToken('4ce88904-75c5-412c-8365-df97d9e18a8f'); //token that enable sign up. see http://docs.backand.com/en/latest/apidocs/security/index.html#sign-up
+        BackandProvider.setAnonymousToken('87c37623-a2d2-42af-93df-addc65c6e9ad'); // token is for anonymous login. see http://docs.backand.com/en/latest/apidocs/security/index.html#anonymous-access
 
         $stateProvider
             // setup an abstract state for the tabs directive
             .state('tab', {
-                url: '',
+                url: '/tabs',
                 abstract: true,
                 templateUrl: 'templates/tabs.html'
             })
@@ -44,43 +50,14 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand', 'SimpleRESTIonic.controll
                         controller: 'LoginCtrl as login'
                     }
                 }
-            })
-            .state('tab.signup', {
-                url: '/signup',
-                views: {
-                    'tab-signup': {
-                        templateUrl: 'templates/tab-signup.html',
-                        controller: 'SignUpCtrl as vm'
-                    }
-                }
-            }
-        );
+            });
 
-        $urlRouterProvider.otherwise('/dashboard');
+        $urlRouterProvider.otherwise('/tabs/dashboard');
+
         $httpProvider.interceptors.push('APIInterceptor');
     })
 
-    .run(function ($ionicPlatform, $rootScope, $state, LoginService, Backand) {
-
-        $ionicPlatform.ready(function () {
-
-            // Hide the accessory bar by default (remove this to show the accessory bar above the keyboard
-            // for form inputs)
-            if (window.cordova && window.cordova.plugins && window.cordova.plugins.Keyboard) {
-                cordova.plugins.Keyboard.hideKeyboardAccessoryBar(true);
-                cordova.plugins.Keyboard.disableScroll(true);
-            }
-
-            if (window.StatusBar) {
-                // org.apache.cordova.statusbar required
-                StatusBar.styleLightContent();
-            }
-
-
-            var isMobile = !(ionic.Platform.platforms[0] == "browser");
-            Backand.setIsMobile(isMobile);
-            Backand.setRunSignupAfterErrorInSigninSocial(true);
-        });
+    .run(function ($rootScope, $state, LoginService, Backand) {
 
         function unauthorized() {
             console.log("user is unauthorized, sending to login");
@@ -105,3 +82,4 @@ angular.module('SimpleRESTIonic', ['ionic', 'backand', 'SimpleRESTIonic.controll
         });
 
     })
+

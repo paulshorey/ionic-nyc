@@ -1,10 +1,3 @@
-/*
- * Angular SDK to use with backand
- * @version 1.8.1 - 2015-11-12
- * @link https://www.backand.com
- * @author Itay Herskovits
- * @license MIT License, http://www.opensource.org/licenses/MIT
- */
 (function () {
 var BKStorage = (function () {
     'use strict';
@@ -80,10 +73,8 @@ var config = {
     isManagingHttpInterceptor: true,
     isManagingRefreshToken: true,
     runSigninAfterSignup: true,
-    callSignupOnSingInSocialError : true, // tell code to run signup after signIn error because user is not registered to application
     appName: null,
-    userProfileName: 'backand_user',
-    isMobile: false
+    userProfileName: 'backand_user'
 };
 
 var EVENTS = {
@@ -231,13 +222,6 @@ angular.module('backand', [])
                 return BackandAuthService.changePassword(oldPassword, newPassword)
             };
 
-            self.setIsMobile = function(val){
-                config.isMobile = val;
-            }
-
-            self.setRunSignupAfterErrorInSigninSocial = function(val){
-                config.callSignupOnSingInSocialError = val;
-            }
 
             self.getUserDetails = function (force) {
                 return BackandUserService.getUserDetails(force)
@@ -342,8 +326,6 @@ function HttpInterceptor ($q, Backand, BackandHttpBufferService, BackandAuthServ
 function BackandAuthService ($q, $rootScope, BackandHttpBufferService) {
     var self = this;
     var authenticating = false;
-    var NOT_SIGNEDIN_ERROR = 'The user is not signed up to';
-    var dummyReturnAddress = 'http://www.backandaaa.com';
 
     var urls = {
         signup: '/1/user/signup',
@@ -412,119 +394,26 @@ function BackandAuthService ($q, $rootScope, BackandHttpBufferService) {
         return socialAuth(provider, true, spec);
     };
 
-
-    function mobileSocialLoginInner(ref, isSignUp, provider, spec) {
-        ref.addEventListener('loadstart', function (e) {
-            //alert(e.url);
-
-            if (e.url.indexOf(dummyReturnAddress) == 0) { // mean startWith
-                //alert(e.url);
-                ref.close();
-
-                // error return from server
-                if (e.url.indexOf('error=') > -1) {
-                    var dataStr = decodeURI(e.url).split('error=')[1];
-                    var userData = JSON.parse(dataStr);
-                    if (!isSignUp && config.callSignupOnSingInSocialError && userData.message.indexOf(NOT_SIGNEDIN_ERROR) > -1) {  // check is right error
-                        socialAuth(provider, true, spec);
-                        return;
-                    }
-
-                    var rejection = {
-                        data: userData.message + ' (signing in with ' + userData.provider + ')'
-                    };
-
-                    rejection.error_description = rejection.data;
-                    self.loginPromise.reject(rejection);
-                    return;
-                }
-
-                // login is OK
-                var dataStr = decodeURI(e.url).split('/#/?data=')[1];
-                var userData = JSON.parse(dataStr);
-                if (self.inSocialSignup) {
-                    self.inSocialSignup = false;
-                    $rootScope.$broadcast(EVENTS.SIGNUP);
-                }
-                signinWithToken(userData);
-            }
-        });
-    }
-
-    function socialAuth(provider, isSignUp, spec) {
+    function socialAuth (provider, isSignUp, spec) {
         if (!socialProviders[provider]) {
             throw Error('Unknown Social Provider');
         }
 
         self.loginPromise = $q.defer();
 
-        if(config.isMobile){
-        	var api_url = config.apiUrl + '/1/'
-                + getSocialUrl(provider, isSignUp)
-                + '&appname=' + config.appName
-                + '&returnAddress=http://allevents.nyc';
-           console.log('api_url',api_url);
-           var ref = window.open(
-                api_url,
-                'id1',
-                spec || 'left=1, top=1, width=600, height=600');
+        self.socialAuthWindow = window.open(
+            config.apiUrl + '/1/'
+            + getSocialUrl(provider, isSignUp)
+            + '&appname=' + config.appName
+            + '&returnAddress=',
+            'id1',
+            spec || 'left=1, top=1, width=600, height=600');
 
-           mobileSocialLoginInner(ref, isSignUp, provider, spec);
-        }
-        else {
-        	var api_url = config.apiUrl + '/1/'
-                + getSocialUrl(provider, isSignUp)
-                + '&appname=' + config.appName
-                + '&returnAddress=http://allevents.nyc';
-           console.log('api_url',api_url);
-           self.socialAuthWindow = window.open(
-                api_url,
-                'id1',
-                spec || 'left=1, top=1, width=600, height=600');
-
-           window.addEventListener('message', (function(provider, spec){ return function(e) { setUserDataFromToken(e, provider, spec)}})(provider,spec), false);
-        }
-
+        window.addEventListener('message', setUserDataFromToken, false);
         return self.loginPromise.promise;
     }
 
-
-    function socialAuth(provider, isSignUp, spec) {
-
-        if (!socialProviders[provider]) {
-            throw Error('Unknown Social Provider');
-        }
-
-        self.loginPromise = $q.defer();
-
-        if(config.isMobile){
-
-            var ref = window.open(
-                config.apiUrl + '/1/'
-                + getSocialUrl(provider, isSignUp)
-                + '&appname=' + config.appName
-                + '&returnAddress='+ dummyReturnAddress,
-                'id1',
-                spec || 'left=1, top=1, width=600, height=600');
-
-            mobileSocialLoginInner(ref, isSignUp, provider, spec);
-        }
-        else {
-            self.socialAuthWindow = window.open(
-                config.apiUrl + '/1/'
-                + getSocialUrl(provider, isSignUp)
-                + '&appname=' + config.appName
-                + '&returnAddress=',
-                'id1',
-                spec || 'left=1, top=1, width=600, height=600');
-
-            window.addEventListener('message', (function(provider, spec){ return function(e) { setUserDataFromToken(e, provider, spec)}})(provider,spec), false);
-        }
-        return self.loginPromise.promise;
-    }
-
-    function setUserDataFromToken(event, provider, spec) {
-        console.log(event, provider, spec);
+    function setUserDataFromToken (event) {
         self.socialAuthWindow.close();
         self.socialAuthWindow = null;
 
@@ -535,32 +424,26 @@ function BackandAuthService ($q, $rootScope, BackandHttpBufferService) {
         var userData = JSON.parse(event.data);
         if (userData.error) {
 
-            if (config.callSignupOnSingInSocialError && userData.error.message.indexOf(NOT_SIGNEDIN_ERROR) > -1) {  // check is right error
-                socialAuth(provider, true, spec);
-                return;
-            }
-
             var rejection = {
                 data: userData.error.message + ' (signing in with ' + userData.error.provider + ')'
             };
             rejection.error_description = rejection.data;
             self.loginPromise.reject(rejection);
 
-        }
-        else if (userData.data) {
+        } else if (userData.data) {
             if (self.inSocialSignup) {
                 self.inSocialSignup = false;
                 $rootScope.$broadcast(EVENTS.SIGNUP);
             }
             return signinWithToken(userData.data);
 
-        }
-        else {
+        } else {
             self.loginPromise.reject();
         }
     }
 
     // tokens authentication
+
     function signinWithToken (userData) {
         var tokenData = {
             grant_type: 'password',
